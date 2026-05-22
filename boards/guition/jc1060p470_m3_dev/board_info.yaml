@@ -1,0 +1,4 @@
+board: jc1060p470_m3_dev
+chip: esp32p4
+description: "Guition JC1060P470 / JC-ESP32P4-M3-DEV (7-inch 1024x600 IPS HMI)"
+manufacturer: "Guition"

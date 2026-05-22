@@ -1,0 +1,159 @@
+version: 1.0.0
+# Devices Configuration for Guition JC1060P470 (JC-ESP32P4-M3-DEV)
+#
+# CHANGE LOG (revision 3 - HEADLESS / NO DISPLAY VARIANT)
+#   - display_lcd and lcd_touch are commented out below.
+#     With no MIPI-DSI panel physically connected, the JD9165 driver
+#     hangs the CPU forever polling for a panel response that will
+#     never arrive.  Disabling those two devices lets the rest of the
+#     system (ES8311 audio, SDMMC, ESP-Hosted, WiFi) initialize and
+#     reach the network stack.
+#
+#   To re-enable when a display is attached: uncomment the display_lcd
+#   and lcd_touch blocks below and rebuild.
+
+devices:
+  # =====================================================================
+  # Audio output: ES8311 codec (DAC path)
+  # =====================================================================
+  - name: audio_dac
+    chip: es8311
+    type: audio_codec
+    version: default
+    config:
+      dac_enabled: true
+      dac_max_channel: 1
+      dac_channel_mask: "1"
+      mclk_enabled: true
+
+    peripherals:
+      - name: gpio_pa_control
+        gain: 6
+        active_level: 1
+      - name: i2s_audio_out
+      - name: i2c_master
+        address: 0x30
+        frequency: 400000
+
+  # =====================================================================
+  # Audio input: ES8311 codec (ADC path - same chip as audio_dac)
+  # =====================================================================
+  - name: audio_adc
+    chip: es8311
+    type: audio_codec
+    version: default
+    config:
+      adc_enabled: true
+      adc_max_channel: 2
+      adc_channel_mask: "11"
+      adc_channel_labels: [RE, FC]
+      mclk_enabled: true
+
+    peripherals:
+      - name: i2s_audio_in
+      - name: i2c_master
+        address: 0x30
+        frequency: 400000
+
+  # =====================================================================
+  # microSD filesystem (FAT on SDMMC).
+  # Benign if no card inserted - reports 0x107 and moves on.
+  # =====================================================================
+  - name: fs_sdcard
+    type: fs_fat
+    sub_type: sdmmc
+    version: default
+    config:
+      sub_config:
+        slot: SDMMC_HOST_SLOT_0
+        frequency: SDMMC_FREQ_HIGHSPEED
+        bus_width: 4
+        pins:
+          clk: 0
+          cmd: 0
+          d0: 0
+          d1: 0
+          d2: 0
+          d3: 0
+          d4: 0
+          d5: 0
+          d6: 0
+          d7: 0
+        ldo_chan_id: 4
+
+  # =====================================================================
+  # LCD backlight controller (LEDC-based).
+  # Kept enabled - doesn't depend on the panel being present, and
+  # leaves the option of dimming the (absent) backlight later harmless.
+  # =====================================================================
+  - name: lcd_brightness
+    type: ledc_ctrl
+    version: default
+    config:
+      default_percent: 100
+    peripherals:
+      - name: ledc_backlight
+
+  # ---------------------------------------------------------------------
+  # DISPLAY AND TOUCH - DISABLED FOR HEADLESS BRING-UP
+  # ---------------------------------------------------------------------
+  # Re-enable both blocks below when a display ribbon is physically
+  # connected to the JC1060P470 module.  See README.md for context.
+  # ---------------------------------------------------------------------
+  #
+  # - name: display_lcd
+  #   chip: jd9165
+  #   type: display_lcd
+  #   sub_type: dsi
+  #   dependencies:
+  #     espressif/esp_lcd_jd9165: "*"
+  #   config:
+  #     reset_gpio_num: -1
+  #     rgb_ele_order: LCD_RGB_ELEMENT_ORDER_RGB
+  #     data_endian: LCD_RGB_DATA_ENDIAN_LITTLE
+  #     bits_per_pixel: 16
+  #     reset_active_high: 0
+  #     dbi_config:
+  #       virtual_channel: 0
+  #       lcd_cmd_bits: 8
+  #       lcd_param_bits: 8
+  #     dpi_config:
+  #       virtual_channel: 0
+  #       dpi_clk_src: MIPI_DSI_DPI_CLK_SRC_DEFAULT
+  #       dpi_clock_freq_mhz: 52
+  #       in_color_format: LCD_COLOR_FMT_RGB565
+  #       num_fbs: 1
+  #       flags:
+  #         use_dma2d: true
+  #       video_timing:
+  #         h_size: 1024
+  #         v_size: 600
+  #         hsync_back_porch: 136
+  #         hsync_pulse_width: 24
+  #         hsync_front_porch: 160
+  #         vsync_back_porch: 21
+  #         vsync_pulse_width: 2
+  #         vsync_front_porch: 12
+  #     peripherals:
+  #       - name: ldo_mipi
+  #       - name: dsi_display
+  #
+  # - name: lcd_touch
+  #   chip: gt911
+  #   type: lcd_touch
+  #   sub_type: i2c
+  #   version: default
+  #   dependencies:
+  #     espressif/esp_lcd_touch_gt911: "*"
+  #   config:
+  #     io_i2c_config:
+  #       lcd_cmd_bits: 16
+  #     touch_config:
+  #       x_max: 1024
+  #       y_max: 600
+  #       flags:
+  #         mirror_x: false
+  #         mirror_y: false
+  #   peripherals:
+  #     - name: i2c_master
+  #       i2c_addr: [0xba, 0x28]

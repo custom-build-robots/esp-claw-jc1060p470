@@ -1,0 +1,71 @@
+# =====================================================================
+# Board-specific sdkconfig defaults for Guition JC1060P470
+# (JC-ESP32P4-M3-DEV)
+#
+# Hardware:
+#   ESP32-P4 main SoC (16 MB flash, 32 MB octal PSRAM)
+#   ESP32-C6 wireless slave (WiFi 6 / BT 5) via ESP-Hosted over SDIO
+#   JD9165 MIPI-DSI 1024x600 IPS display
+#   GT911 capacitive touch
+#   ES8311 audio codec
+#   microSD slot (4-bit SDMMC)
+# =====================================================================
+
+# ---------- Flash ----------
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="16MB"
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
+
+# ---------- PSRAM (32 MB octal / hex on JC1060P470) ----------
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_HEX=y
+CONFIG_SPIRAM_SPEED_200M=y
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_SPIRAM_BOOT_INIT=y
+CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+
+# ---------- Partition table ----------
+# Use a 16 MB-friendly layout.  Provide partitions.csv at the project
+# root or point at one explicitly.
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions.csv"
+
+# ---------- ESP-Hosted (WiFi 6 / BT 5 via on-board ESP32-C6) ----------
+# The ESP32-P4 has no built-in radio.  All WiFi/BT comes from the on-board
+# ESP32-C6 running ESP-Hosted slave firmware, accessed over SDIO.
+#
+# VERIFY: exact symbol names against the version of espressif/esp_hosted
+# you end up pulling in - these are the symbols as of esp_hosted 0.0.30,
+# but they evolve.
+CONFIG_ESP_WIFI_REMOTE_ENABLED=y
+CONFIG_ESP_WIFI_REMOTE_LIBRARY_HOSTED=y
+
+# ESP-Hosted SDIO transport configuration
+CONFIG_ESP_HOSTED_HOST_INTERFACE_SDIO=y
+CONFIG_ESP_HOSTED_SDIO_4_BIT_BUS=y
+
+# SDIO host pins (must match the JC1060P470 routing to the C6 module)
+# pingcfg.h:  CLK=18  CMD=19  D0=14  D1=15  D2=16  D3=17  C6_RST=54
+CONFIG_ESP_HOSTED_SDIO_CLK_GPIO=18
+CONFIG_ESP_HOSTED_SDIO_CMD_GPIO=19
+CONFIG_ESP_HOSTED_SDIO_D0_GPIO=14
+CONFIG_ESP_HOSTED_SDIO_D1_GPIO=15
+CONFIG_ESP_HOSTED_SDIO_D2_GPIO=16
+CONFIG_ESP_HOSTED_SDIO_D3_GPIO=17
+
+# C6 slave reset GPIO (P4 side controls this)
+CONFIG_ESP_HOSTED_SLAVE_RESET_GPIO=54
+
+# ---------- Console (UART0 on GPIO 37/38 per pingcfg.h) ----------
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_UART_NUM=0
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200
+
+# ---------- FreeRTOS ----------
+CONFIG_FREERTOS_HZ=1000
+
+# Chip revision range for older ESP32-P4 silicon (Guition JC1060P470 hat v1.3)
+CONFIG_ESP32P4_REV_MIN_FULL=0
+CONFIG_ESP32P4_REV_MAX_FULL_NUM=199
